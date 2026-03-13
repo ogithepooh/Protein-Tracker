@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Protein">
+<meta name="theme-color" content="#0a0a0f">
+<title>Protein Takip</title>
+<style>
+:root{
+  --bg:#0a0a0f;
+  --bg2:#13131f;
+  --bg3:#1c1c2e;
+  --border:#2a2a40;
+  --text:#f0f0ff;
+  --muted:#6b6b8a;
+  --red:#e24b4a;
+  --blue:#378add;
+  --amber:#ba7517;
+  --green:#1d9e75;
+  --accent:#ff3333;
+  --radius:14px;
+  --radius-sm:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;overflow:hidden}
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+.screen{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 0 80px;-webkit-overflow-scrolling:touch}
+.screen::-webkit-scrollbar{display:none}
+
+/* NAV */
+.nav{display:flex;background:var(--bg2);border-top:0.5px solid var(--border);padding:8px 0 max(8px,env(safe-area-inset-bottom));position:fixed;bottom:0;left:0;right:0;z-index:100}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:transparent;color:var(--muted);font-size:10px;font-weight:500;cursor:pointer;padding:4px 0;transition:color .15s}
+.nav-item.active{color:var(--accent)}
+.nav-icon{font-size:22px;line-height:1}
+
+/* HEADER */
+.header{padding:max(54px,env(safe-area-inset-top)) 20px 16px;background:var(--bg)}
+.header h1{font-size:28px;font-weight:700;letter-spacing:-.5px}
+.header p{font-size:14px;color:var(--muted);margin-top:2px}
+.day-nav{display:flex;align-items:center;gap:12px;margin-top:12px}
+.day-nav button{width:32px;height:32px;border-radius:50%;border:0.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.day-nav span{flex:1;text-align:center;font-size:15px;font-weight:600}
+
+/* RINGS */
+.rings-row{display:flex;justify-content:center;gap:20px;padding:8px 20px 20px}
+.ring-wrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+.ring-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.ring-val{font-size:14px;font-weight:700}
+.ring-sub{font-size:11px;color:var(--muted)}
+.ring-svg{transform:rotate(-90deg)}
+
+/* BARS */
+.bars{padding:0 20px 20px;display:flex;flex-direction:column;gap:10px}
+.bar-row{display:flex;flex-direction:column;gap:5px}
+.bar-top{display:flex;justify-content:space-between;align-items:baseline}
+.bar-name{font-size:13px;color:var(--muted)}
+.bar-vals{font-size:13px;font-weight:600}
+.bar-track{height:6px;background:var(--bg3);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+
+/* REMAIN */
+.remain-card{margin:0 20px 20px;background:var(--bg2);border-radius:var(--radius);border:0.5px solid var(--border);padding:16px}
+.remain-title{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+.remain-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.remain-cell{text-align:center}
+.remain-num{font-size:18px;font-weight:700}
+.remain-lbl{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* ADD SCREEN */
+.form-section{padding:0 20px 16px}
+.hint{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:20px;font-size:13px;line-height:1.6;color:var(--muted)}
+.hint strong{color:var(--text)}
+.form-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.field input{background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-size:16px;color:var(--text);outline:none;-webkit-appearance:none}
+.field input:focus{border-color:#5555aa}
+.field input::placeholder{color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.add-btn{width:100%;padding:15px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;letter-spacing:.3px;transition:opacity .15s}
+.add-btn:active{opacity:.8}
+.flash{text-align:center;font-size:14px;color:var(--green);padding:10px;font-weight:600}
+
+/* LOG */
+.log-section{padding:0 20px}
+.log-item{display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+.log-left{}
+.log-name{font-size:15px;font-weight:600;margin-bottom:4px}
+.log-macros{font-size:12px;color:var(--muted);line-height:1.5}
+.log-del{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:4px;line-height:1}
+.empty{text-align:center;padding:60px 20px;color:var(--muted);font-size:15px;line-height:1.7}
+
+/* SETTINGS */
+.settings-section{padding:0 20px}
+.settings-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:0.5px solid var(--border)}
+.setting-row:last-child{border-bottom:none}
+.setting-name{font-size:15px}
+.setting-inp{background:transparent;border:none;color:var(--accent);font-size:15px;font-weight:700;text-align:right;width:80px;outline:none}
+.section-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;padding:0 4px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="screen" id="screen-home">
+    <div class="header">
+      <h1>Protein Takip</h1>
+      <div class="day-nav">
+        <button onclick="changeDay(-1)">‹</button>
+        <span id="day-label">Bugün</span>
+        <button onclick="changeDay(1)">›</button>
+      </div>
+    </div>
+    <div class="rings-row" id="rings"></div>
+    <div class="bars" id="bars"></div>
+    <div class="remain-card">
+      <div class="remain-title">Kalan hedef</div>
+      <div class="remain-grid" id="remain"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-add" style="display:none">
+    <div class="header"><h1>Ekle</h1></div>
+    <div class="form-section">
+      <div class="hint">
+        <strong>Nasıl çalışır:</strong> Yemeğin fotoğrafını Claude'a at, o analiz edip değerleri söylesin. Sonra buraya gir.
+      </div>
+      <div class="form-card">
+        <div class="field">
+          <label>Besin adı</label>
+          <input id="f-name" type="text" placeholder="örn: Tavuklu pilav">
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Kalori</label><input id="f-kcal" type="number" inputmode="decimal" placeholder="420"></div>
+          <div class="field"><label>Protein (g)</label><input id="f-prot" type="number" inputmode="decimal" placeholder="32"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Karb (g)</label><input id="f-carb" type="number" inputmode="decimal" placeholder="28"></div>
+          <div class="field"><label>Yağ (g)</label><input id="f-fat" type="number" inputmode="decimal" placeholder="18"></div>
+        </div>
+        <button class="add-btn" onclick="addEntry()">Günlüğe Ekle</button>
+        <div id="flash"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-log" style="display:none">
+    <div class="header"><h1>Günlük</h1>
+      <div class="day-nav">
+        <button onclick="changeDay(-1)">‹</button>
+        <span id="log-day-label">Bugün</span>
+        <button onclick="changeDay(1)">›</button>
+      </div>
+    </div>
+    <div class="log-section" id="log-list"></div>
+  </div>
+
+  <div class="screen" id="screen-settings" style="display:none">
+    <div class="header"><h1>Hedefler</h1></div>
+    <div class="settings-section">
+      <div class="section-label">Günlük hedefler</div>
+      <div class="settings-card">
+        <div class="setting-row"><span class="setting-name">Kalori (kcal)</span><input class="setting-inp" id="t-kcal" type="number" inputmode="decimal" value="2400" onchange="saveTargets()"></div>
+        <div class="setting-row"><span class="setting-name">Protein (g)</span><input class="setting-inp" id="t-prot" type="number" inputmode="decimal" value="155" onchange="saveTargets()"></div>
+        <div class="setting-row"><span class="setting-name">Karbonhidrat (g)</span><input class="setting-inp" id="t-carb" type="number" inputmode="decimal" value="270" onchange="saveTargets()"></div>
+        <div class="setting-row"><span class="setting-name">Yağ (g)</span><input class="setting-inp" id="t-fat" type="number" inputmode="decimal" value="70" onchange="saveTargets()"></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <button class="nav-item active" onclick="showScreen('home',this)"><span class="nav-icon">📊</span>Özet</button>
+    <button class="nav-item" onclick="showScreen('add',this)"><span class="nav-icon">➕</span>Ekle</button>
+    <button class="nav-item" onclick="showScreen('log',this)"><span class="nav-icon">📋</span>Günlük</button>
+    <button class="nav-item" onclick="showScreen('settings',this)"><span class="nav-icon">⚙️</span>Hedefler</button>
+  </nav>
+</div>
+
+<script>
+let currentDay=0;
+let targets={kcal:2400,p:155,c:270,f:70};
+let log={};
+
+function init(){
+  const st=localStorage.getItem('pt-targets');
+  if(st){targets=JSON.parse(st);document.getElementById('t-kcal').value=targets.kcal;document.getElementById('t-prot').value=targets.p;document.getElementById('t-carb').value=targets.c;document.getElementById('t-fat').value=targets.f;}
+  const sl=localStorage.getItem('pt-log');
+  if(sl)log=JSON.parse(sl);
+  renderHome();
+}
+
+function saveTargets(){
+  targets={kcal:+document.getElementById('t-kcal').value||2400,p:+document.getElementById('t-prot').value||155,c:+document.getElementById('t-carb').value||270,f:+document.getElementById('t-fat').value||70};
+  localStorage.setItem('pt-targets',JSON.stringify(targets));
+  renderHome();
+}
+
+function saveLog(){localStorage.setItem('pt-log',JSON.stringify(log));}
+
+function dayKey(o){const d=new Date();d.setDate(d.getDate()+o);return d.toISOString().slice(0,10);}
+function dayLabel(o){if(o===0)return'Bugün';if(o===-1)return'Dün';if(o===1)return'Yarın';const d=new Date();d.setDate(d.getDate()+o);return d.toLocaleDateString('tr-TR',{day:'numeric',month:'long'});}
+function getLog(){return log[dayKey(currentDay)]||[];}
+function totals(){return getLog().reduce((a,x)=>({kcal:a.kcal+x.kcal,p:a.p+x.p,c:a.c+x.c,f:a.f+x.f}),{kcal:0,p:0,c:0,f:0});}
+
+function ring(pct,color,size){
+  const r=size/2-7,circ=2*Math.PI*r,dash=Math.min(pct,1)*circ;
+  return`<svg class="ring-svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#1c1c2e" stroke-width="7"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}"/>
+  </svg>`;
+}
+
+function renderHome(){
+  const t=totals();
+  const cols={kcal:'#e24b4a',p:'#378add',c:'#ba7517',f:'#1d9e75'};
+  const lbls={kcal:'Kalori',p:'Protein',c:'Karb',f:'Yağ'};
+  const units={kcal:'kcal',p:'g',c:'g',f:'g'};
+  const tgts={kcal:targets.kcal,p:targets.p,c:targets.c,f:targets.f};
+  const vals={kcal:t.kcal,p:t.p,c:t.c,f:t.f};
+
+  document.getElementById('day-label').textContent=dayLabel(currentDay);
+
+  document.getElementById('rings').innerHTML=['kcal','p'].map(k=>`
+    <div class="ring-wrap">
+      ${ring(vals[k]/tgts[k],cols[k],96)}
+      <div class="ring-label">${lbls[k]}</div>
+      <div class="ring-val" style="color:${cols[k]}">${Math.round(vals[k])}<span style="font-size:11px;font-weight:400"> ${units[k]}</span></div>
+      <div class="ring-sub">/ ${tgts[k]}</div>
+    </div>`).join('');
+
+  document.getElementById('bars').innerHTML=['kcal','p','c','f'].map(k=>`
+    <div class="bar-row">
+      <div class="bar-top"><span class="bar-name">${lbls[k]}</span><span class="bar-vals" style="color:${cols[k]}">${Math.round(vals[k])} / ${tgts[k]} ${units[k]}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.min(Math.round(vals[k]/tgts[k]*100),100)}%;background:${cols[k]}"></div></div>
+    </div>`).join('');
+
+  const rem={kcal:Math.max(0,Math.round(tgts.kcal-vals.kcal)),p:Math.max(0,Math.round(tgts.p-vals.p)),c:Math.max(0,Math.round(tgts.c-vals.c)),f:Math.max(0,Math.round(tgts.f-vals.f))};
+  document.getElementById('remain').innerHTML=[
+    {k:'kcal',l:'kcal',c:'#e24b4a'},{k:'p',l:'protein',c:'#378add'},{k:'c',l:'karb',c:'#ba7517'},{k:'f',l:'yağ',c:'#1d9e75'}
+  ].map(({k,l,c})=>`<div class="remain-cell"><div class="remain-num" style="color:${c}">${rem[k]}</div><div class="remain-lbl">${l}</div></div>`).join('');
+}
+
+function renderLog(){
+  const l=getLog();
+  document.getElementById('log-day-label').textContent=dayLabel(currentDay);
+  if(!l.length){document.getElementById('log-list').innerHTML=`<div class="empty">Henüz bir şey eklemedin.<br>Fotoğrafı Claude'a at,<br>değerleri buraya gir.</div>`;return;}
+  document.getElementById('log-list').innerHTML=l.map((item,i)=>`
+    <div class="log-item">
+      <div class="log-left">
+        <div class="log-name">${item.name}</div>
+        <div class="log-macros">${Math.round(item.kcal)} kcal · <span style="color:#378add">${Math.round(item.p)}g protein</span> · ${Math.round(item.c)}g karb · ${Math.round(item.f)}g yağ</div>
+      </div>
+      <button class="log-del" onclick="removeItem(${i})">×</button>
+    </div>`).join('');
+}
+
+function addEntry(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name)return;
+  const entry={name,kcal:parseFloat(document.getElementById('f-kcal').value)||0,p:parseFloat(document.getElementById('f-prot').value)||0,c:parseFloat(document.getElementById('f-carb').value)||0,f:parseFloat(document.getElementById('f-fat').value)||0};
+  const key=dayKey(currentDay);
+  if(!log[key])log[key]=[];
+  log[key].push(entry);
+  saveLog();
+  ['f-name','f-kcal','f-prot','f-carb','f-fat'].forEach(id=>document.getElementById(id).value='');
+  const fl=document.getElementById('flash');
+  fl.innerHTML=`<div class="flash">✓ "${entry.name}" eklendi</div>`;
+  setTimeout(()=>fl.innerHTML='',2000);
+  renderHome();
+}
+
+function removeItem(i){
+  const key=dayKey(currentDay);
+  log[key].splice(i,1);
+  saveLog();renderLog();renderHome();
+}
+
+function changeDay(d){
+  currentDay+=d;
+  renderHome();renderLog();
+}
+
+function showScreen(name,btn){
+  document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+name).style.display='block';
+  btn.classList.add('active');
+  if(name==='home')renderHome();
+  if(name==='log')renderLog();
+}
+
+init();
+</script>
+</body>
+</html>
